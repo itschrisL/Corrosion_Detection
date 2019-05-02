@@ -45,27 +45,6 @@ def img_to_black_white(img):
     return new_img
 
 
-def load_data_to_file(images):
-    f = open(RGB_DATA_FILE_NAME, 'w')
-    for im in images:
-        f.write(get_rgb_of_img(im[0]))
-        f.write(" || ")
-        f.write(get_rgb_of_img(im[1]))
-        f.write("\n")
-    f.close()
-
-
-# Helper method to read the data from the file
-def read_data_from_file():
-    rtn_list = []
-    f = open(RGB_DATA_FILE_NAME, 'r')
-    lines = f.readlines()
-    for line in lines:
-        line.replace("\n", "")
-        x = line.split(" || ")
-        rtn_list.append((eval(x[0]), eval(x[1])))
-
-
 def show_image(img):
     plt.imshow(img)
     plt.show()
@@ -122,6 +101,7 @@ def binary_convert(img):
     return copy_img
 
 
+# Method we experimented with to
 def convert_from_binary(img):
     copy_img = []
     for r in range(0, len(img)):
@@ -129,19 +109,15 @@ def convert_from_binary(img):
         copy_img.append(t)
         for c in range(0, len(img[0])):
             x = sum(img[r][c])
-            # y = [int(i*255) for i in img[r][c]]
             if x <= 1:
-                # copy_img[r][c] = (1, 1, 1)
                 copy_img[r].append((1, 1, 1))
             elif x > 1:
-                # copy_img[r][c] = (255, 255, 255)
                 copy_img[r].append((255, 255, 255))
-            else:
-                print("Should not be here")
-                return
 
     return copy_img
 
+
+# Converts each value in an image to the full 255 image.
 def create_tuples(img):
     new_img = []
     for r in range(0, len(img)):
@@ -151,27 +127,17 @@ def create_tuples(img):
     return new_img
 
 
-
-def find_biggest_resolution(img_list):
-    width_max = 0
-    height_max = 0
-    for im in img_list:
-        w, h = im.size
-        if w > width_max:
-            width_max = w
-        if h > height_max:
-            height_max = h
-    return width_max, height_max
-
-
 if __name__ == "__main__":
 
-    RGB_DATA_FILE_NAME = 'rgb_data_file.txt'
+    # TODO: Change these to the path for the images
+    Original_Images = "./Images/cherrypicked"
+
+    GT_Images = "./Images/cherrypicked_gt"
 
     cherryPickedFolderPath = Path("./Images/cherrypicked")
     DATA_FOLDER_PATH = Path()  # Our image file
 
-    image_list = load_data_from_folder(Path("./Images/cherrypicked"), Path("./Images/cherrypicked_gt"))
+    image_list = load_data_from_folder(Path(Original_Images), Path("./Images/cherrypicked_gt"))
     print("Done loading images.")
 
     rgb_values = []
@@ -189,22 +155,17 @@ if __name__ == "__main__":
         label_set.append(x)
 
     corrosion_model = CorrosionDetectionModel()
-    corrosion_model.train_model(np.array(testing_set), np.array(label_set), use_cp=True)
+    corrosion_model.train_model(np.array(testing_set), np.array(label_set), use_cp=False)
 
     p_img = corrosion_model.predict_img(np.array(testing_set[:4]))
-
-    # show_both_images(p_img[0], label_set[0],
-    #                  img1_title="Predicted Img",
-    #                  img2_title="Original Label Img",
-    #                  subplot_title="Predicted Image and Labeled Image")
 
     show_three_images([testing_set[0], create_tuples(p_img[0]), rgb_values[0][1]],
                       ["Original Image", "Predicted Image From Model", "Correct Labeled Image"])
 
-    show_three_images([testing_set[1], p_img[1], rgb_values[1][1]],
+    show_three_images([testing_set[1], create_tuples(p_img[1]), rgb_values[1][1]],
                       ["Original Image", "Predicted Image From Model", "Correct Labeled Image"])
 
-    show_three_images([testing_set[2], p_img[2], rgb_values[2][1]],
+    show_three_images([testing_set[2], create_tuples(p_img[2]), rgb_values[2][1]],
                       ["Original Image", "Predicted Image From Model", "Correct Labeled Image"])
 
 

@@ -3,6 +3,7 @@ from tensorflow.python.keras import layers
 from tensorflow.python.keras import losses
 from tensorflow.python.keras import models
 import matplotlib.pyplot as plt
+import os
 
 
 class CorrosionDetectionModel:
@@ -12,7 +13,7 @@ class CorrosionDetectionModel:
 
         self.input_shape = (256, 256, 3)
         self.steps_per_epoch = 1
-        self.epochs = 200
+        self.epochs = 20
         self.batch_size = 5
 
         self.saved_weights_path = "./saved_weights.hdf5"
@@ -65,7 +66,7 @@ class CorrosionDetectionModel:
 
         train_data, train_labels, val_data, val_labels = self.split_data(training_set, training_labels)
 
-        if use_cp:
+        if use_cp and os.path.isfile(self.saved_weights_path):
             self.model.load_weights(self.saved_weights_path)
             print("Loaded weights")
 
@@ -74,15 +75,16 @@ class CorrosionDetectionModel:
                                  steps_per_epoch=self.steps_per_epoch,
                                  epochs=self.epochs,
                                  validation_data=(val_data, val_labels),
-                                 validation_steps=self.steps_per_epoch)
+                                 validation_steps=self.steps_per_epoch,
+                                 callbacks=[self.cp])
 
         print("Done training and saving weights...")
         self.model.save_weights(self.saved_weights_path, overwrite=True)
 
         print("\n=============================================================\n")
         print("Evaluating model")
-        val = self.model.evaluate(val_data, val_labels)
-        print(val)
+        val, acc = self.model.evaluate(val_data, val_labels)
+        print("Model's Accuracy: " + str(acc * 100))
 
         self.show_history(history)
 
